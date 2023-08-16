@@ -3,3 +3,5 @@ A simple c++ tool to visualize (synchronized) kitti gray images and Lidar point 
 
 Libs: PCL(1.13.1), OpenCV(4.3.0)
 
+
+![alt text](https://github.com/QtSignalProcessing/cam_lidar_visualizer/blob/main/res/screenshot.png)
