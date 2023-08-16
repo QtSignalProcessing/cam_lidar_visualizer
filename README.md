@@ -5,3 +5,10 @@ Libs: PCL(1.13.1), OpenCV(4.3.0)
 
 
 ![alt text](https://github.com/QtSignalProcessing/cam_lidar_visualizer/blob/main/res/screenshot.png)
+
+
+### TODO
+- [ ] Add comment 
+- [ ] Lidar-cam calibration visualization
+- [ ] Two view disparity estimation
+- [ ] simple GUI?
