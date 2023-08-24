@@ -35,8 +35,8 @@ Kitti_eigen_item Kitti_eigen_split::operator[](int idx)
 
 void Kitti_eigen_split::init()
 {
-    auto img_folder = kitti_path / KITTI_ODIMETRY_GRAY;
-    auto lidar_folder = kitti_path / KITTI_ODIMETRY_LIDAR;
+    auto img_folder = kitti_path / KITTI_ES_ODIMETRY_GRAY;
+    auto lidar_folder = kitti_path / KITTI_ES_ODIMETRY_LIDAR;
     std::vector<fs::path> img_folders, lidar_folders;
     try
     {
@@ -61,7 +61,7 @@ void Kitti_eigen_split::init()
             file_paths.cam0_files.push_back(dir_entry.path());
         for (auto const& dir_entry : fs::directory_iterator{img_folders[ii]/CAM1})
             file_paths.cam1_files.push_back(dir_entry.path());
-        for (auto const& dir_entry : fs::directory_iterator{lidar_folders[ii]/LIDAR})
+        for (auto const& dir_entry : fs::directory_iterator{lidar_folders[ii]/LIDAR_ES})
             file_paths.lidar_files.push_back(dir_entry.path());
     }
     
@@ -97,7 +97,8 @@ void Kitti_eigen_split::visualize()
 void updateLidar(Kitti_eigen_split* kes)
 {
     auto points = load_pcd(kes->file_paths.lidar_files[kes->get_index()]);
-    kes->viewers.lidar_viewer->updatePointCloud(points); 
+    if(!kes->viewers.lidar_viewer->wasStopped())
+        kes->viewers.lidar_viewer->updatePointCloud(points); 
 }
 
 void updateImage(Kitti_eigen_split* kes)
@@ -106,8 +107,10 @@ void updateImage(Kitti_eigen_split* kes)
     cv::Mat img1 = cv::imread(kes->file_paths.cam1_files[kes->get_index()]);
     cv::resize(img0, img0, cv::Size(img0.cols/2, img0.rows), cv::INTER_LINEAR);
     cv::resize(img1, img1, cv::Size(img1.cols/2, img1.rows), cv::INTER_LINEAR);
-    kes->viewers.cam0_viewer->showRGBImage(img0.data, img0.cols, img0.rows);
-    kes->viewers.cam1_viewer->showRGBImage(img1.data, img1.cols, img1.rows);
+    if(!kes->viewers.cam0_viewer->wasStopped())
+        kes->viewers.cam0_viewer->showRGBImage(img0.data, img0.cols, img0.rows);
+    if(!kes->viewers.cam1_viewer->wasStopped())
+        kes->viewers.cam1_viewer->showRGBImage(img1.data, img1.cols, img1.rows);
 }
 
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void* ptr)
@@ -124,6 +127,7 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void*
         kes->increase_index();
         updateImage(kes);
         updateLidar(kes);
-        kes->viewers.lidar_viewer->spinOnce(100);
+        if(!kes->viewers.lidar_viewer->wasStopped())
+            kes->viewers.lidar_viewer->spinOnce(100);
    }
 }

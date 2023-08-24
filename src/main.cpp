@@ -2,7 +2,7 @@
 
 int main()
 {
-    Kitti_eigen_split kitti("../../../kitti");
+    Kitti_eigen_split kitti("../../../kitti_eigen_split");
     kitti.visualize();
     return 0;
 }
