@@ -38,6 +38,7 @@ struct Kitti_eigen_split_viewers
     pcl::visualization::PCLVisualizer* lidar_viewer;
     pcl::visualization::ImageViewer* cam0_viewer;
     pcl::visualization::ImageViewer* cam1_viewer;
+    pcl::visualization::ImageViewer* disparity;
 
     Kitti_eigen_split_viewers()
     {

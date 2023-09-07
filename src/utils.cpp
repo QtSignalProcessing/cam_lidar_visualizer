@@ -67,27 +67,61 @@ void Kitti_eigen_split::init()
     
 }
 
+cv::Mat Kitti_eigen_split::compute_disparity(const cv::Mat& img0, const cv::Mat& img1)
+{
+    cv::Mat disparity_sgbm, disparity;
+    sgbm->compute(img0, img1, disparity_sgbm);
+    cv::Mat raw_disp_vis;
+    getDisparityVis(disparity_sgbm,raw_disp_vis,1.0);
+    double Min, Max;
+    cv::minMaxLoc(raw_disp_vis, &Min, &Max);
+    int max_int = ceil(Max);
+//create a window complete black
+    cv::Mat win_mat(cv::Size(raw_disp_vis.cols, raw_disp_vis.rows), CV_8UC3, cv::Scalar(0, 0, 0));
+    raw_disp_vis.convertTo(raw_disp_vis, CV_8UC3, 255 / (Max - Min), -255 * Min / (Max - Min));
+    raw_disp_vis.convertTo(raw_disp_vis, CV_8UC3);
+    cv::Mat M;
+    cv::applyColorMap(raw_disp_vis, disparity, cv::COLORMAP_JET);
+
+
+   // cv::cvtColor(M, disparity, cv::COLOR_GRAY2RGB);
+    return disparity;
+}
+
 void Kitti_eigen_split::visualize()
 {
     viewers.cam0_viewer = new pcl::visualization::ImageViewer("Image0");//viewer2.get();
     viewers.cam1_viewer = new pcl::visualization::ImageViewer("Image1");
     viewers.lidar_viewer = new pcl::visualization::PCLVisualizer("Lidar");
+    viewers.disparity = new pcl::visualization::ImageViewer("Disparity");
     //TODO: error handle for loading data
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcd = load_pcd(file_paths.lidar_files[current_idx]);
     viewers.lidar_viewer->addPointCloud(pcd);
     cv::Mat img0 = cv::imread(file_paths.cam0_files[current_idx]);
     cv::Mat img1 = cv::imread(file_paths.cam1_files[current_idx]);
+    //These magic numbers are from 
+    //https://github.com/gaoxiang12/slambook2/tree/master/ch5/stereo
+    // Credits go to the original author (Xiang gao)
+    sgbm = cv::StereoSGBM::create(
+         0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32); 
+   
+    cv::Mat disparity = compute_disparity(img0, img1);
+    cv::resize(disparity, disparity, cv::Size(disparity.cols/2, disparity.rows), cv::INTER_LINEAR);
+    viewers.disparity->showRGBImage(disparity.data, disparity.cols, disparity.rows);
     cv::resize(img0, img0, cv::Size(img0.cols/2, img0.rows), cv::INTER_LINEAR);
     cv::resize(img1, img1, cv::Size(img1.cols/2, img1.rows), cv::INTER_LINEAR);
     viewers.cam0_viewer->showRGBImage(img0.data, img0.cols, img0.rows);
     viewers.cam1_viewer->showRGBImage(img1.data, img1.cols, img1.rows);
-
+     
     viewers.cam0_viewer->registerKeyboardCallback(keyboardEventOccurred, static_cast<void*>(this));
     viewers.cam1_viewer->registerKeyboardCallback(keyboardEventOccurred, static_cast<void*>(this));
     viewers.lidar_viewer->registerKeyboardCallback(keyboardEventOccurred, static_cast<void*>(this));
-    while (!viewers.cam0_viewer->wasStopped() && !viewers.cam1_viewer->wasStopped() && !viewers.lidar_viewer->wasStopped())
+    viewers.disparity->registerKeyboardCallback(keyboardEventOccurred, static_cast<void*>(this));
+
+    while (!viewers.cam0_viewer->wasStopped() && !viewers.cam1_viewer->wasStopped() && !viewers.lidar_viewer->wasStopped() && !viewers.disparity->wasStopped())
     {
         viewers.cam1_viewer->spin();
+        viewers.disparity->spin();
         viewers.lidar_viewer->spinOnce(100);
         viewers.cam0_viewer->spinOnce(100);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -105,12 +139,16 @@ void updateImage(Kitti_eigen_split* kes)
 {
     cv::Mat img0 = cv::imread(kes->file_paths.cam0_files[kes->get_index()]);
     cv::Mat img1 = cv::imread(kes->file_paths.cam1_files[kes->get_index()]);
+    cv::Mat disparity = kes->compute_disparity(img0, img1);
     cv::resize(img0, img0, cv::Size(img0.cols/2, img0.rows), cv::INTER_LINEAR);
     cv::resize(img1, img1, cv::Size(img1.cols/2, img1.rows), cv::INTER_LINEAR);
+    cv::resize(disparity, disparity, cv::Size(disparity.cols/2, disparity.rows), cv::INTER_LINEAR);
     if(!kes->viewers.cam0_viewer->wasStopped())
         kes->viewers.cam0_viewer->showRGBImage(img0.data, img0.cols, img0.rows);
     if(!kes->viewers.cam1_viewer->wasStopped())
         kes->viewers.cam1_viewer->showRGBImage(img1.data, img1.cols, img1.rows);
+    if(!kes->viewers.disparity->wasStopped())
+        kes->viewers.disparity->showRGBImage(disparity.data, disparity.cols, disparity.rows);
 }
 
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void* ptr)
@@ -118,11 +156,12 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void*
     Kitti_eigen_split* kes = static_cast<Kitti_eigen_split*>(ptr);
     if (event.getKeySym() == "q" && event.keyDown())
     {
+        kes->viewers.lidar_viewer->close();
         kes->viewers.cam0_viewer->close();
         kes->viewers.cam1_viewer->close();
-        kes->viewers.lidar_viewer->close();
+        kes->viewers.disparity->close();
     }
-    if (event.getKeyCode () == 32 && event.keyDown ())
+    if ((event.getKeyCode () == 32 && event.keyDown ()) || (event.getKeyCode () == 110 && event.keyDown ()))
     {
         kes->increase_index();
         updateImage(kes);
@@ -130,4 +169,16 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void*
         if(!kes->viewers.lidar_viewer->wasStopped())
             kes->viewers.lidar_viewer->spinOnce(100);
    }
+   if (event.getKeyCode () == 112 && event.keyDown ())
+   {
+        if(kes->get_index() > 0)
+            kes->decrease_index();
+        else
+            return;
+        updateImage(kes);
+        updateLidar(kes);
+        if(!kes->viewers.lidar_viewer->wasStopped())
+            kes->viewers.lidar_viewer->spinOnce(100);
+   }
 }
+

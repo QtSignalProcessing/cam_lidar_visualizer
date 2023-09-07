@@ -10,6 +10,6 @@ Libs: PCL(1.13.1), OpenCV(4.3.0)
 ### TODO
 - [ ] Dataloader for standard Kitti data storage structure
 - [ ] Lidar-cam calibration visualization
-- [ ] Two view disparity estimation
+- [x] Two view disparity estimation
 - [ ] Add comment 
 - [ ] simple GUI?

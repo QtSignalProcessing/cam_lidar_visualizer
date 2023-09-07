@@ -11,7 +11,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/calib3d.hpp>
-
+#include "opencv2/ximgproc.hpp"
+using namespace cv::ximgproc;
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -23,6 +24,7 @@ private:
     
     int current_idx;
     void init();
+    cv::Ptr<cv::StereoSGBM> sgbm;
 
 public:
     fs::path kitti_path;
@@ -30,9 +32,11 @@ public:
     Kitti_eigen_split_viewers viewers;
     Kitti_eigen_split(string path);
     void increase_index(){current_idx++;}
-    int get_index(){return current_idx;}
+    void decrease_index(){current_idx--;}
+    int get_index() const{return current_idx;}
     Kitti_eigen_item operator[](int index);
     void visualize();
+    cv::Mat compute_disparity(const cv::Mat& img0, const cv::Mat& img1);
 };
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr load_pcd(fs::path path);
