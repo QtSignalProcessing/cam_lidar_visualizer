@@ -8,6 +8,7 @@ Libs: PCL(1.13.1), OpenCV(4.3.0)
 
 
 ### TODO
+- [ ] Define a virtual class Dataset for easier extension
 - [ ] Dataloader for standard Kitti data storage structure
 - [ ] Lidar-cam calibration visualization
 - [x] Two view disparity estimation

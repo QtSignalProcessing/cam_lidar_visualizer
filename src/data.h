@@ -38,13 +38,14 @@ struct Kitti_eigen_split_viewers
     pcl::visualization::PCLVisualizer* lidar_viewer;
     pcl::visualization::ImageViewer* cam0_viewer;
     pcl::visualization::ImageViewer* cam1_viewer;
-    pcl::visualization::ImageViewer* disparity;
+    pcl::visualization::ImageViewer* disparity_viewer;
 
     Kitti_eigen_split_viewers()
     {
         lidar_viewer = nullptr;
         cam0_viewer = nullptr;
         cam1_viewer = nullptr;
+        disparity_viewer = nullptr;
     }
 
     ~Kitti_eigen_split_viewers()
@@ -55,6 +56,8 @@ struct Kitti_eigen_split_viewers
             delete cam0_viewer;
         if(cam1_viewer != nullptr)
             delete cam1_viewer; 
+        if(disparity_viewer != nullptr)
+            delete disparity_viewer;
     }
 };
 
