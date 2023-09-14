@@ -5,8 +5,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr load_pcd(fs::path path)
     std::fstream input(path, ios::in | ios::binary);
     input.seekg(0, ios::beg);
     pcl::PointCloud<pcl::PointXYZ>::Ptr points (new pcl::PointCloud<pcl::PointXYZ>); 
-    int i;
-	for (i=0; input.good() && !input.eof(); i++) {
+	for (int i=0; input.good() && !input.eof(); i++) 
+    {
 		pcl::PointXYZ point;
         float intensity;
 		input.read((char *) &point.x, 3*sizeof(float));
@@ -18,8 +18,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr load_pcd(fs::path path)
 }
 
 
-Kitti_eigen_split::Kitti_eigen_split(string path):kitti_path(path) 
-                                                 
+Kitti_eigen_split::Kitti_eigen_split(string path):kitti_path(path)                                              
 {
     init();  
 }
@@ -82,7 +81,7 @@ cv::Mat Kitti_eigen_split::compute_disparity(const cv::Mat& img0, const cv::Mat&
 
 void Kitti_eigen_split::visualize()
 {
-    viewers.cam0_viewer = new pcl::visualization::ImageViewer("Image0");//viewer2.get();
+    viewers.cam0_viewer = new pcl::visualization::ImageViewer("Image0");
     viewers.cam1_viewer = new pcl::visualization::ImageViewer("Image1");
     viewers.lidar_viewer = new pcl::visualization::PCLVisualizer("Lidar");
     viewers.disparity_viewer = new pcl::visualization::ImageViewer("Disparity");
@@ -93,7 +92,7 @@ void Kitti_eigen_split::visualize()
     cv::Mat img1 = cv::imread(file_paths.cam1_files[current_idx]);
     //These magic numbers are from 
     //https://github.com/gaoxiang12/slambook2/tree/master/ch5/stereo
-    // Credits go to the original author (Xiang gao)
+    // Credits go to the original author (Xiang GAO)
     sgbm = cv::StereoSGBM::create(
          0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32); 
    
