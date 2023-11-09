@@ -1,0 +1,3 @@
+[submodule "3rdparty/kitti_motion_compensation"]
+	path = 3rdparty/kitti_motion_compensation
+	url = https://github.com/QtSignalProcessing/kitti_motion_compensation
